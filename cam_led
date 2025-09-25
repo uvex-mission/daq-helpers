@@ -3,6 +3,11 @@
 # Usage:  cam_led <LED_voltage>
 # Set 0V for OFF
 
+if [ "$#" = 0 ]; then
+  echo "Usage: cam_led <VOLTS>;  0V for OFF"
+  exit 0
+fi
+
 CAMEXE="cam -v"  # camerad command
 
 VLED=$1 # LED Voltage in V (float)

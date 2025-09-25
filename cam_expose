@@ -3,6 +3,11 @@
 # Script to help with setting up exposures
 # Usage:  cam_expose <BASENAME> <EXPTIME> <N_EXPOSURES> <FILE_NUMBER_TAG>
 
+if [ "$#" = 0 ]; then
+  echo "Usage: cam_expose <BASENAME> <EXPTIME> <N_EXPOSURES> <FILE_NUMBER_TAG>"
+  exit 0
+fi
+
 CAMEXE="cam -v"  # camerad command
 delay=1
 
