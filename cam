@@ -1,0 +1,21 @@
+# bash script to send a socket command to camerad
+
+# Path to this file
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+# get parameters:
+#  SOCKEXE
+#  CAMHOST
+#  BLKPORT
+#  TIMEOUT
+source $SCRIPT_DIR/sock.cfg
+
+if [ "$1" = "-v" ]; then
+  shift
+  echo $@
+fi
+
+command=$@  # Pass all arguments as the command
+
+$SOCKEXE -h $CAMHOST -p $BLKPORT "$command" -t $TIMEOUT
+

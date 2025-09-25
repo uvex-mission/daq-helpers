@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Usage:  cam_led <LED_voltage>
+# Set 0V for OFF
+
+CAMEXE="cam -v"  # camerad command
+
+VLED=$1 # LED Voltage in V (float)
+
+echo Setting VLED=$VLED
+$CAMEXE bias 9 25 $VLED # sets bias voltage on board 9, pin 25
+$CAMEXE key VLED=$VLED
+

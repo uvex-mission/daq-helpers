@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# Script to help with setting up exposures
+# Usage:  cam_expose <BASENAME> <EXPTIME> <N_EXPOSURES> <FILE_NUMBER_TAG>
+
+CAMEXE="cam -v"  # camerad command
+delay=1
+
+basename=$1 # filename base - camserver adds numbers
+exptime=$2  # exposure time in s or ms depending on LONGEXPOSURE setting
+Nexpose=$3  # number of frames in cube;
+imnum=$4    # Change the image name counter (optional)
+
+if [ !  -z "$imnum" ] # check argument exists
+  then
+    $CAMEXE imnum $imnum  # Set the image name number
+fi
+
+$CAMEXE basename $basename
+$CAMEXE key EXPTIME=.  # remove hardcoded key if it exists
+$CAMEXE exptime $exptime
+
+sleep $delay
+
+fitsname=`$CAMEXE test fitsname | awk '{print $1;}'`
+echo "Starting $fitsname"
+$CAMEXE expose $Nexpose  # Start the exposures
+

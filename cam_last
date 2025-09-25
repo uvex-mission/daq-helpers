@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Print the path/filename of the last FITS file exposed
+# Assumes integer number filenaming: path_to_file/basename_0001.fits
+# Assumes filenames and paths in server have not changed
+
+CAMEXE=cam
+
+LASTPATH=`$CAMEXE test fitsname | awk '{print $1}'`
+LASTPATH=`echo $(dirname "${LASTPATH}")`
+
+LASTBASE=`$CAMEXE basename | awk '{print $1}'`
+
+LASTIMNUM=`$CAMEXE imnum | awk '{print $1}'`  # Number for next filename
+let "LASTIMNUM--"
+LASTIMNUM=$(printf "%04d" $LASTIMNUM)  # Zero-pad to 4 spaces
+
+echo ${LASTPATH}/${LASTBASE}_${LASTIMNUM}.fits

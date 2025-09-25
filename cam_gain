@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+CAMEXE="cam -v"  # camerad command
+delay=4
+
+gain=$1
+
+if [ "${gain^^}" = "HIGH" ] || [ "${gain^^}" = "HI" ]; then
+  $CAMEXE mode rollingreset
+  $CAMEXE setp GainHigh 1
+  $CAMEXE setp GainLow 0
+  $CAMEXE key GAIN=HIGH
+
+elif [ "${gain^^}" = "LOW" ] || [ "${gain^^}" = "LO" ]; then
+  $CAMEXE mode rollingreset
+  $CAMEXE setp GainHigh 0
+  $CAMEXE setp GainLow 1
+  $CAMEXE key GAIN=LOW
+
+elif [ "${gain^^}" = "HDR" ]; then
+  $CAMEXE mode rollingreset_hdr
+  $CAMEXE setp GainHigh 0
+  $CAMEXE setp GainLow 0
+  $CAMEXE key GAIN=HDR
+
+else
+ echo Invalid gain.  Choose: HIGH, LOW, HDR
+
+fi
+
+echo Waiting $delay seconds for gain change...
+sleep $delay

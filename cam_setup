@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+CAMEXE="cam -v"  # camerad command
+delay=1
+
+opencheck=`$CAMEXE power`  # contains "ERROR" if no connection
+if [[ $opencheck == *"ERROR"* ]]; then
+  echo "Opening port to Archon..."
+  $CAMEXE open
+  sleep $delay
+fi
+
+echo Loading ACF $1 ...
+$CAMEXE load $1 # Load default camerad config file   #/home/user/CMOST/cmost1k1k.cfg #$1
+sleep $delay
+
+# Exposure settings
+$CAMEXE mode rollingreset
+$CAMEXE longexposure true  # exptime in s not ms
+$CAMEXE setp InitFrame 1  # Read but don't save an initial frame before exposure sequence
+
+# Gain settings
+$CAMEXE setp GainHigh 1
+$CAMEXE setp GainLow 0
+$CAMEXE key GAIN=high
+
+# Output settings
+$CAMEXE fitsnaming number  # use sequential numbers not datetime
+$CAMEXE autodir no
+$CAMEXE datacube true  # true-> all images in 1 file;  false-> 1 file per image
+
+# Startup the detector
+sleep $delay
+$CAMEXE native poweron  # Power to detector
+sleep $delay
+$CAMEXE setp Start 1  # Starts the waveforms clocking
+sleep $delay
+
+# Print the next filename
+CAMEXE="cam"  # remove verbose camerad command
+fitsname=`$CAMEXE test fitsname | awk '{print $1;}'`
+echo "Next filename: $fitsname"
