@@ -1,3 +1,4 @@
+#!/usr/bin/bash
 # bash script to send a socket command to camerad
 
 # Path to this file
