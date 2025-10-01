@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 # Author: Chaz Shapiro (2022)
 #
 # Digitally CDS subtract a CMOS MKxNK raw image
@@ -154,7 +154,21 @@ if __name__ == "__main__":
         # Save as Multi-extension?
         if imgcube.size == 0: # We didn't use imgcube
             hdulist.insert(0, hdu0)  # Add the primary HDU back
+
+            # Split up dual gain images into extensions for each gain type
+            if DUALGAIN:
+                n_hdu = len(hdulist)
+                hdulist = pf.HDUList(hdulist + [hdu.copy() for hdu in hdulist[1:]] ) # use copies to avoid pointing to same object
+                # Delete half of each image, rename the extension to gain type
+                for hdu in hdulist[1:n_hdu]:
+                    hdu.data = hdu.data[:,:int(xsize/2/2)]
+                    hdu.header['EXTNAME'] += '-HDRLO'
+                for hdu in hdulist[n_hdu:]:
+                    hdu.data = hdu.data[:,int(xsize/2/2):]
+                    hdu.header['EXTNAME'] += '-HDRHI'
+
             hdulist.writeto(outpath, overwrite=True)
+
         else:
             pf.writeto(outpath,imgcube.astype(args.outtype),overwrite=True ,header=hdr)
 
