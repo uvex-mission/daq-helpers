@@ -21,6 +21,8 @@ import sys
 from numpy import array, median
 import numpy as np  # for greycode
 
+FILENAMES_FILE = 'filenames.txt'
+
 ## Gray Code Descrambler
 
 def binary_to_gray(n):
@@ -41,15 +43,15 @@ def DescramblerGrayCodeImage(image):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Digitally CDS subtract a raw image from CMOS MKxNK')
-    parser.add_argument('filename', type=str, nargs='*')
+    parser.add_argument('filename', type=str, nargs='+')
     parser.add_argument('-tag', type=str, default='cds' ,help='Output filename tag; default=cds')
     parser.add_argument('-nchan' ,type=int ,default=None ,help='Override number of channels')
     parser.add_argument('-outtype', type=str, default='int16' ,help='Output data type; default=int16')
     parser.add_argument('-reference', type=str, default=None, help='path and filename of reference frame to subtract')
     parser.add_argument('-verbose', action='store_true', default=False ,help='Print output filenames as they are written')
     parser.add_argument('-stack', action='store_true', default=False ,help='Stack frames via medianing')
-    parser.add_argument('-skip', type=int, default=0 ,help='Discard 1st N frames')
-    parser.add_argument('-grey', action='store_true', default=False ,help='Descramble rows using grey coding')
+    parser.add_argument('-nskip', type=int, default=None ,help='Discard 1st N frames')
+    parser.add_argument('-grey', action='store_true', default=None ,help='Descramble rows using grey coding')
     parser.add_argument('-rawdual', action='store_true', default=False ,help='Deinterlace and stitch together raw dual gain frames')
     parser.add_argument('-raw', action='store_true', default=False ,help='Deinterlace and stitch together raw frames without subtracting')
     # parser.add_argument('-mex', action='store_true', default=False ,help='Save as multi-extention FITS')
@@ -58,18 +60,57 @@ if __name__ == "__main__":
 
     outtag = args.tag+'_'
 
+    # Are we processing a standard SERIES in its own directory?  Needs a file with list of filenames
+    if path.isdir(args.filename[0]):
+        if len(args.filename)>1: sys.exit('Too many arguments; please specify 1 directory only')
+        print('Processing the whole directory...')
+        IMDIR = args.filename[0]
+        # Look for series records
+        FILENAMES = path.join(IMDIR,FILENAMES_FILE)
+        if not path.isfile(FILENAMES): sys.exit('Missing file: '+FILENAMES)
+
+        # Parse filenames
+        with open(FILENAMES) as file:
+            flist = [path.join(IMDIR,line.rstrip()) for line in file]
+
+        # Override filenames with filenames list
+        args.filename = flist
+
+    # MAIN LOOP OVER FITS FILES
     for f in args.filename:
         hdulist = pf.open(f ,memmap=False)
         hdr = hdulist[0].header  # telemetry is in 0th FITS header
         MULTIEXT = (len(hdulist)>1)   # Is the file multi-extension?
 
+        # Parse NSKIP
+        if args.nskip is not None:
+            nskip = args.nskip
+        else:
+            try:
+                nskip = int(hdr['NSKIP'])
+            except:
+                print('Could not get NSKIP key:',f)
+                nskip = 0
+        hdr['NSKIPCDS'] = nskip
+
+        # Parse GREY
+        if args.grey is not None:
+            grey = args.grey
+        else:
+            try:
+                grey = hdr['GREY'].upper().strip() in ['TRUE','T']
+            except:
+                print('Could not get GREY key:',f)
+                grey = False
+        hdr['GREYCDS'] = grey
+
         # Trim data according to format and skip parameter
         if MULTIEXT:
             hdu0 = hdulist[0].copy()
-            hdulist = hdulist[args.skip+1:]  # Remove Primary HDU (0th) and skipped images
+            hdulist = hdulist[nskip+1:]  # Remove Primary HDU (0th) and skipped images
         else:
             if hdulist[0].data.ndim > 2:  # Check if image is 3D
-                hdulist[0].data = hdulist[0].data[args.skip:]
+                hdulist[0].data = hdulist[0].data[nskip:]
 
         imgcube = []
 
@@ -84,7 +125,7 @@ if __name__ == "__main__":
             elif img.ndim == 3: zsize,ysize,xsize = img.shape
             
             nchan = args.nchan if args.nchan else int(xsize/CHANNEL_SIZE/2) # 1st/2nd frames are stacked column-wise
-            print('nchan',nchan)
+            # print('nchan',nchan)
 
             if xsize%(2*nchan) > 0:
                 print('ERROR: Image width is not a multiple of 2x number of channels')
@@ -126,7 +167,7 @@ if __name__ == "__main__":
                 diff = (img[:,0::2]-img[:,1::2])       # Difference every other channel (1st/2nd frames are adjacent)
                 diff.resize(ysize,int(xsize/2))        # Stitch channels back together; new width is 1/2 raw image width
 
-            if (args.grey and not args.reference): # Reference image assumed already deinterlaced
+            if (grey and not args.reference): # Reference image assumed already deinterlaced
                 diff = DescramblerGrayCodeImage(diff)
 
             if MULTIEXT:
