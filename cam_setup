@@ -26,7 +26,7 @@ $CAMEXE key GAIN=high
 
 # Output settings
 $CAMEXE fitsnaming number  # use sequential numbers not datetime
-$CAMEXE autodir no
+$CAMEXE autodir yes
 $CAMEXE datacube true  # true-> all images in 1 file;  false-> 1 file per image
 
 # Startup the detector
