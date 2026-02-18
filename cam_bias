@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+# Change a bias voltage on the Archon by name
+# Usage: cam_bias <BIAS_NAME> <VOLTS>
+# Set 0V for OFF
+
+allnames="   VHIGHTG, VHIGHRST, VHIGHMIM, IBUFPAD, ICDSPAD, PIXVREF, VHIGHROW, \n"
+allnames="$allnames   VLOWTG, VLOWRST, VLOWMIM, IPIXPAD, CLOFFSET, VLOWROW"
+
+if [ "$#" -lt "2" ]; then
+  printf "Change a bias voltage on the Archon by name \n"
+  printf "Usage: cam_bias <BIAS_NAME> <VOLTS>;  0V for OFF\n"
+  printf "Choose from: \n"
+  printf "$allnames \n"
+  exit 0
+fi
+
+CAMEXE="cam -v"  # camerad command
+MODULE=9  # Archon board where biases live
+
+BIAS_NAME=$1 # string
+VOLTS=$2 # LED Voltage in V (float)
+
+case $BIAS_NAME in
+
+  VHIGHTG)
+    PIN=1
+    ;;
+
+  VHIGHRST)
+    PIN=2
+    ;;
+
+  VHIGHMIM)
+    PIN=3
+    ;;
+
+  IBUFPAD)
+    PIN=4
+    ;;
+
+  ICDSPAD)
+    PIN=5
+    ;;
+
+  PIXVREF)
+    PIN=6
+    ;;
+
+  VHIGHROW)
+    PIN=7
+    ;;
+
+  VLOWTG)
+    PIN=13
+    ;;
+
+  VLOWRST)
+    PIN=14
+    ;;
+
+  VLOWMIM)
+    PIN=15
+    ;;
+
+  IPIXPAD)
+    PIN=16
+    ;;
+
+  CLOFFSET)
+    PIN=17
+    ;;
+
+  VLOWROW)
+    PIN=18
+    ;;
+
+  *)
+    printf "Unrecognized bias name: $BIAS_NAME \n"
+    printf "Choose from: \n"
+    printf "$allnames \n"
+    exit 1
+    ;;
+esac
+
+# Send the commands
+printf "Setting $BIAS_NAME=$VOLTS \n"
+$CAMEXE bias $MODULE $PIN $VOLTS # sets bias voltage
+$CAMEXE key $BIAS_NAME=$VOLTS    # Add FITS header
