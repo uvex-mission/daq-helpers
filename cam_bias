@@ -4,8 +4,8 @@
 # Usage: cam_bias <BIAS_NAME> <VOLTS>
 # Set 0V for OFF
 
-allnames="   VHIGHTG, VHIGHRST, VHIGHMIM, IBUFPAD, ICDSPAD, PIXVREF, VHIGHROW, \n"
-allnames="$allnames   VLOWTG, VLOWRST, VLOWMIM, IPIXPAD, CLOFFSET, VLOWROW"
+allnames="   VHIGHTG, VHIGHRST, VHIGHMIM, IBUFPAD, ICDSPAD, VHIGHROW, PIXVREF \n"
+allnames="$allnames   VLOWTG,  VLOWRST,  VLOWMIM,  IPIXPAD, CLOFFSET, VLOWROW"
 
 if [ "$#" -lt "2" ]; then
   printf "Change a bias voltage on the Archon by name \n"
